@@ -1,0 +1,8 @@
+YANDEX_CAMPAIGN_ID = '22885074'
+YANDEX_CLIENT_ID = '9b6958dd70d84bff873eac4f7919aed3'
+YANDEX_API_KEY = 'AQAAAABbH_tkAAeNgNoHmNN1WEzVuREf5abQVwo'
+URL_YANDEX_SKUS = 'https://api.partner.market.yandex.ru/v2/campaigns/' + YANDEX_CAMPAIGN_ID + '/stats/skus.json'
+URL_YANDEX_INFO = 'https://api.partner.market.yandex.ru/v2/campaigns/' + YANDEX_CAMPAIGN_ID + '/offer-mapping-entries.json'
+URL_YANDEX_STOCKS = 'https://api.partner.market.yandex.ru/stocks'
+URL_YANDEX_PRICES = 'https://api.partner.market.yandex.ru/v2/campaigns/' + YANDEX_CAMPAIGN_ID + '/offer-prices/updates.json'
+URL_YANDEX_SHOW_PRICES = 'https://api.partner.market.yandex.ru/v2/campaigns/' + YANDEX_CAMPAIGN_ID + '/offer-prices.json'
