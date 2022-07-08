@@ -1,7 +1,7 @@
 import requests
 import time
 from loguru import logger
-from config import \
+from PRICES_STOCKS.ozon.config import \
     OZON_CLIENT_ID, \
     OZON_API_KEY, \
     URL_OZON_PRODUCTS, \
@@ -139,8 +139,8 @@ def main():
     GET_WAREHOUSE_LIST = False
     SET_PRICE = False
     SET_STOCK = False
-    PRINT_BEFORE_UPDATE = True
-    PRINT_AFTER_UPDATE = False
+    PRINT_BEFORE_UPDATE = False
+    PRINT_AFTER_UPDATE = True
 
     # получить информацию о складах
     if GET_WAREHOUSE_LIST:
@@ -189,8 +189,8 @@ def main():
     # вывести на печать список товаров ПОСЛЕ внесения изменений
     if PRINT_AFTER_UPDATE:
         print('-------- ПОСЛЕ ВНЕСЕНИЯ ИЗМЕНЕНИЙ -----------')
-        ozon.show_products()
-        # ozon.show_stocks()
+        # ozon.show_products()
+        ozon.show_stocks()
 
 if __name__ == '__main__':
     main()

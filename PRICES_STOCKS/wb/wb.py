@@ -1,6 +1,6 @@
 import requests
 import time
-from config import \
+from PRICES_STOCKS.wb.config import \
     WILDBERRIES_API_KEY, \
     URL_WILDBERRIES_INFO, \
     URL_WILDBERRIES_PRICES, \
@@ -48,8 +48,8 @@ class WildberriesApi():
 def main():
     wb = WildberriesApi(WILDBERRIES_API_KEY)
 
-    SHOW_PRODUCTS = True
-    SHOW_STOCKS = False
+    SHOW_PRODUCTS = False
+    SHOW_STOCKS = True
     SET_STOCK = False
     SET_PRICE = False
 
