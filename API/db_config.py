@@ -1,4 +1,4 @@
 DB_SERVER = 'localhost'
-DB_USER = 'postgres'
-DB_PASSWORD = ''
-DB_NAME = 'flask_test'
+DB_USER = 'api'
+DB_PASSWORD = 'api'
+DB_NAME = 'api'
