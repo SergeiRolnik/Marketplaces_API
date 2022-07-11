@@ -1,0 +1,97 @@
+### UPDATE STOCKS (Ozon)
+POST http://localhost:5000/stocks
+Content-Type: application/json
+Client-Id: 2663
+Api-Key: 236f59a6-0906-4ae8-8109-ae089a42c0b0
+
+{
+"data":
+  {
+    "marketplace": "Ozon",
+    "products":
+      [
+        {
+          "product_id": 1176550,
+          "stock": 20,
+          "warehouse_id": 23501632841000
+        },
+        {
+          "product_id": 1176734,
+          "stock": 30,
+          "warehouse_id": 23501632841000
+        }
+      ]
+  }
+}
+
+### UPDATE STOCKS (WB)
+POST http://localhost:5000/stocks
+Content-Type: application/json
+Api-Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjNlY2ZhMDQ4LTU4NjQtNGM5MC1hMjAyLTJhNjk3MDZhZTQyMCJ9.LT3CiMCHQgPdHINfkZlqNPKv72-1uoznmyu-SMf2e_8
+
+{
+"data":
+  {
+    "marketplace": "WB",
+    "products":
+      [
+        {
+          "barcode": "2009570561124",
+          "stock": 20,
+          "warehouse_id": 24813
+        },
+        {
+          "barcode": "4687201724513",
+          "stock": 30,
+          "warehouse_id": 24813
+        }
+      ]
+  }
+}
+
+### UPDATE PRICES (Ozon)
+POST http://localhost:5000/prices
+Content-Type: application/json
+Client-Id: 2663
+Api-Key: 236f59a6-0906-4ae8-8109-ae089a42c0b0
+
+{
+"data":
+  {
+    "marketplace": "Ozon",
+    "products":
+      [
+        {
+          "product_id": 1176550,
+          "price": 999,
+        },
+        {
+          "product_id": 1176734,
+          "price": 888,
+        }
+      ]
+  }
+}
+
+### UPDATE PRICES (WB)
+POST http://localhost:5000/prices
+Content-Type: application/json
+Api-Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NJRCI6IjNlY2ZhMDQ4LTU4NjQtNGM5MC1hMjAyLTJhNjk3MDZhZTQyMCJ9.LT3CiMCHQgPdHINfkZlqNPKv72-1uoznmyu-SMf2e_8
+
+{
+"data":
+  {
+    "marketplace": "WB",
+    "products":
+      [
+        {
+          "product_id": 36337638,
+          "price": 999,
+        },
+        {
+          "product_id": 43098379,
+          "price": 888,
+        }
+      ]
+  }
+}
