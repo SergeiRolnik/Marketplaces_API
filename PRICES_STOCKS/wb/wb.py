@@ -48,8 +48,8 @@ class WildberriesApi():
 def main():
     wb = WildberriesApi(WILDBERRIES_API_KEY)
 
-    SHOW_PRODUCTS = False
-    SHOW_STOCKS = True
+    SHOW_PRODUCTS = True
+    SHOW_STOCKS = False
     SET_STOCK = False
     SET_PRICE = False
 

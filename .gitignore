@@ -1,0 +1,7 @@
+/API/MISC/
+/FLASK/
+/.idea/
+/venv/
+/API/__init__.py
+/PRICES_STOCKS/__init__.py
+/TESTS/__init__.py
