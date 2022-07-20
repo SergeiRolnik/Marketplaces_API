@@ -6,4 +6,4 @@
 /PRICES_STOCKS/__init__.py
 /TESTS/__init__.py
 /API/test_rules_db.py
-/API/db.py
+/API/MISC/db_psycopg2.py
