@@ -1,10 +1,10 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse
-from PRICES_STOCKS.ozon.ozon import OzonApi
-from PRICES_STOCKS.wb.wb import WildberriesApi
+from API.MARKETPLACES.ozon.ozon import OzonApi
+from API.MARKETPLACES.wb.wb import WildberriesApi
 from loguru import logger
 from flask_sqlalchemy import SQLAlchemy
-from API.db_config import DB_SERVER, DB_NAME, DB_USER, DB_PASSWORD
+from API.config import DB_SERVER, DB_NAME, DB_USER, DB_PASSWORD
 
 logger.remove()
 logger.add(sink='API/logfile.log', format="{time} {level} {message}", level="INFO")

@@ -5,3 +5,4 @@
 /API/__init__.py
 /PRICES_STOCKS/__init__.py
 /TESTS/__init__.py
+/API/test_rules_db.py

@@ -1,7 +1,7 @@
 import requests
 import time
 from loguru import logger
-from PRICES_STOCKS.ozon.config import \
+from API.MARKETPLACES.ozon.config import \
     OZON_CLIENT_ID, \
     OZON_API_KEY, \
     URL_OZON_PRODUCTS, \

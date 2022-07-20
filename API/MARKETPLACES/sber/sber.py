@@ -26,7 +26,7 @@ class SberApi():
         return params
         # return json.dumps(params, ensure_ascii=False)
 
-    def get_info(self) -> dict: # нет метода, котрый дает список товаров
+    def get_info(self) -> dict: # нет метода, который дает список товаров
         # вставить код
         return self.get(URL_SBER_INFO, self.dumps(params))
 

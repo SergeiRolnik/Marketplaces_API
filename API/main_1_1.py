@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse, abort
-from PRICES_STOCKS.ozon.ozon import OzonApi
-from PRICES_STOCKS.wb.wb import WildberriesApi
+from API.MARKETPLACES.ozon.ozon import OzonApi
+from API.MARKETPLACES.wb.wb import WildberriesApi
 from loguru import logger
 
 logger.remove()
