@@ -1,0 +1,38 @@
+###
+POST http://localhost:5000/stocks
+Content-Type: application/json
+
+{
+  "data": {
+    "rule": 2,
+    "products":
+    [
+      {
+        "product_id": 1176550,
+        "stock": 50
+      },
+      {
+        "product_id": 1176734,
+        "stock": 100
+      }
+    ],
+    "accounts":
+    [
+      {
+        "account_id": 1001,
+        "stock_percentage": 20,
+        "warehouse_id": 1001
+      },
+      {
+        "account_id": 1002,
+        "stock_percentage": 30,
+        "warehouse_id": 1002
+      },
+      {
+        "account_id": 1003,
+        "stock_percentage": 50,
+        "warehouse_id": 1003
+      }
+    ]
+  }
+}
