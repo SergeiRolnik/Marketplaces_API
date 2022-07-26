@@ -1,5 +1,7 @@
 OZON_CLIENT_ID = '2663'
 OZON_API_KEY = '236f59a6-0906-4ae8-8109-ae089a42c0b0'
+# Api-Key из таблицы account_list соотв. client_id = '2663'
+# 'a3924ac9-f3fe-45d3-ba53-ae91209a1e0b'
 URL_OZON_STOCKS_FBS = 'https://api-seller.ozon.ru/v1/product/import/stocks'
 URL_OZON_STOCKS = 'https://api-seller.ozon.ru/v2/products/stocks'
 URL_OZON_PRICES = 'https://api-seller.ozon.ru/v1/product/import/prices'

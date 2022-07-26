@@ -19,11 +19,11 @@ RULES_DB_DSN = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_SERVER}/{DB_NAME}'
 
 # данные для подключения к БД Ecom Seller (master_db)
 MASTER_DB_DSN = """
-host = 'rc1b-itt1uqz8cxhs0c3d.mdb.yandexcloud.net',
-port = '6432',
-dbname = 'market_db',
-user = 'srolnik',
-password = '',
-target_session_attrs = 'read-write',
-sslmode = 'verify-full'
+host = rc1b-itt1uqz8cxhs0c3d.mdb.yandexcloud.net
+port = 6432
+dbname = market_db
+user = srolnik
+password = 
+target_session_attrs = read-write
+sslmode = verify-full
 """

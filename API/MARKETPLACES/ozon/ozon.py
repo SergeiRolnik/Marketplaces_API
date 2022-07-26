@@ -139,8 +139,8 @@ def main():
     GET_WAREHOUSE_LIST = False
     SET_PRICE = False
     SET_STOCK = False
-    PRINT_BEFORE_UPDATE = False
-    PRINT_AFTER_UPDATE = True
+    PRINT_BEFORE_UPDATE = True
+    PRINT_AFTER_UPDATE = False
 
     # получить информацию о складах
     if GET_WAREHOUSE_LIST:
@@ -149,7 +149,7 @@ def main():
     # вывести на печать список товаров ДО внесения изменений
     if PRINT_BEFORE_UPDATE:
         print('-------- ДО ВНЕСЕНИЯ ИЗМЕНЕНИЙ -----------')
-        ozon.show_products()
+        ozon.show_products() # показывает также цену товара
         # ozon.show_stocks()
 
     # обновить цены

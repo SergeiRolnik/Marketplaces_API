@@ -1,37 +1,50 @@
 ###
-POST http://localhost:5000/stocks
+POST http://localhost:5000/get_token
 Content-Type: application/json
 
 {
+  "username": "user2",
+  "password": "user2"
+}
+
+###
+POST http://localhost:5000/stocks
+Content-Type: application/json
+Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NjE0MDk3MjcsImlhdCI6MTY1ODgxNzcyNywibmJmIjoxNjU4ODE3NzI3LCJpZGVudGl0eSI6MX0.pQQH8CgcusVgZlJ1WnvsLP_qM6I_b2aikcB8ADctJy4
+
+{
   "data": {
-    "rule": 2,
+    "rule": 0,
     "products":
     [
       {
-        "product_id": 1176550,
+        "product_id": 3392207,
         "stock": 50
       },
       {
-        "product_id": 1176734,
+        "product_id": 3392208,
         "stock": 100
+      },
+      {
+        "product_id": 3374470,
+        "stock": 50
+      },
+      {
+        "product_id": 3374471,
+        "stock": 50
       }
     ],
     "accounts":
     [
       {
-        "account_id": 1001,
-        "stock_percentage": 20,
-        "warehouse_id": 1001
-      },
-      {
-        "account_id": 1002,
-        "stock_percentage": 30,
-        "warehouse_id": 1002
-      },
-      {
-        "account_id": 1003,
+        "account_id": 25,
         "stock_percentage": 50,
-        "warehouse_id": 1003
+        "warehouse_id": 4625
+      },
+      {
+        "account_id": 105,
+        "stock_percentage": 50,
+        "warehouse_id": 4519
       }
     ]
   }

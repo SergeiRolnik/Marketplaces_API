@@ -1,6 +1,6 @@
 from pprint import pprint
 import requests
-from config import \
+from API.MARKETPLACES.yandex.config import \
     YANDEX_CLIENT_ID, \
     YANDEX_API_KEY, \
     URL_YANDEX_INFO, \

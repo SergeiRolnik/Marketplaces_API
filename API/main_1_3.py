@@ -6,6 +6,9 @@ from API.MARKETPLACES.wb.wb import WildberriesApi
 from API.MARKETPLACES.yandex.yandex import YandexMarketApi
 from API.MARKETPLACES.sber.sber import SberApi
 from loguru import logger
+from flask_jwt import JWT, jwt_required
+from datetime import timedelta
+from API.auth import authenticate, identity
 import concurrent.futures
 from API.config import MASTER_DB_DSN, RULES_DB_DSN, \
     MAX_NUMBER_OF_PRODUCTS, MAX_NUMBER_OF_ACCOUNTS, NUMBER_OF_PRODUCTS_TO_PROCESS
@@ -16,6 +19,13 @@ logger.add(sink='API/logfile.log', format="{time} {level} {message}", level="INF
 app = Flask(__name__)
 api = Api(app)
 
+# создание объекта и настроек json web token для аутентификации пользователя
+app.config['SECRET_KEY'] = 'some secret key'
+app.config['JWT_AUTH_URL_RULE'] = '/get_token' # URL по которому клиент проходит авторизацию и получает токен
+app.config['JWT_EXPIRATION_DELTA'] = timedelta(days=30)  # как долго действует токен
+app.config['PROPAGATE_EXCEPTIONS'] = True  # настройка нужна, чтобы правильно обрабатывалась ошибка при отсутствии токена
+jwt = JWT(app, authenticate, identity)
+
 # покдлючение к БД Ecom Seller master_db
 connection_master_db = psycopg2.connect(MASTER_DB_DSN)
 cursor_master_db = connection_master_db.cursor()
@@ -24,12 +34,30 @@ cursor_master_db = connection_master_db.cursor()
 connection_rules_db = psycopg2.connect(RULES_DB_DSN)
 cursor_rules_db = connection_rules_db.cursor()
 
-# получаем правило из БД (на данный момент эта функция не задействована в работе программы)
-def get_rule(rule_id: str, api='stocks'):
-    sql = 'SELECT data FROM rules_db WHERE api=%s AND data ?& array[%s]'
-    cursor_rules_db.execute(sql, (api, rule_id))
-    rule = cursor_rules_db.fetchone()[0]
+# получаем правило из БД в json формате по rule_id
+def get_rule(rule_id: int):
+    sql = 'SELECT * FROM rules_db WHERE id=' + str(rule_id)
+    cursor_rules_db.execute(sql)
+    rule = cursor_rules_db.fetchone()[2]
     return rule
+
+# функция применяет выборку к списку товаров products в соотв. с правилом rule_id
+def apply_rule(products: list, rule_id: int):
+    rule = get_rule(rule_id)
+    if rule_id == 1:
+        pass
+    elif rule_id == 2:
+        sql = 'SELECT id FROM product_list WHERE category_id IN (' + str(rule['categories']).strip('[]') + ')'
+    elif rule_id == 3:
+        pass
+        # столбца brand_id нет в таблице product_list
+        # sql = 'SELECT id FROM product_list WHERE brand_id IN (' + str(rule['brands']).strip('[]') + ')'
+    else:
+        print('Правило не существует')
+    cursor_master_db.execute(sql)
+    products_in_categories = list(sum(cursor_master_db.fetchall(), ()))  # преобразеум список кортежей в список
+    filtered_products = [product for product in products if product['product_id'] in products_in_categories]
+    return filtered_products
 
 # функция создает соотв. объект класса для отправки запроса на площадку
 def create_marketplace_object(marketplace_id: int, client_id: str, api_key: str):
@@ -38,32 +66,37 @@ def create_marketplace_object(marketplace_id: int, client_id: str, api_key: str)
     elif marketplace_id == 2: #YandexMarket
         return YandexMarketApi(client_id, api_key)
     elif marketplace_id == 3: # WB
-        return WildberriesApi(api_key)
+        return WildberriesApi(client_id)  # вместо api_key подставляем client_id в соотв. с данными в таблице account_list
     elif marketplace_id == 4: # Sber
         return SberApi(api_key)
 
 # выполнение типового SQL запроса в БД
 def run_sql_query(sql_string: str):
     try:
-        cursor_master_db.execute(sql_string)
-        return cursor_master_db.fetchone()[0]
+        # чтобы обращение к БД работало для разных потоков, нужно каждый раз открывать и закрывать соединение
+        # в дальнейшем настроить connection pooling
+        connection = psycopg2.connect(MASTER_DB_DSN)
+        cursor = connection.cursor()
+        cursor.execute(sql_string)
+        return cursor.fetchone()[0]
     except Exception as error:
         logger.error(f'Ошибка {error} при обработке SQL запроса {sql_string}')
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
 
 # функция готовит список для передачи в API метод обновления остатков на соотв. площадке
-def make_update_stocks_list(marketplace_id: int, products: list, stock_percentage: int, wh_id: int, rule_id: int):
+def make_update_stocks_list(marketplace_id: int, products: list, stock_percentage: int, warehouse_id: str, rule_id: int):
 
     update_stocks_list = []
 
     for product in products: # products - список словарей {'product_id: ....., 'stock': .....}
         product_id = product['product_id']
         stock = product['stock']
-        warehouse_id = run_sql_query('SELECT warehouse_id FROM wh_table WHERE id=' + str(wh_id))
-        # wh_id - внутренний код склада, warehouse_id - код склада на площадке
 
-        # если передаваемый остаток = 1, обнуляем его на всех площадках
         quantity = int(stock * stock_percentage / 100)  # ИСПРАВИТЬ, ЧТОБЫ СУММА ОСТАТКОВ БЫЛА ТОЧНО = 100
-        if rule_id == 2 and stock == 1:
+        if rule_id == 2 and stock == 1:   # если передаваемый остаток = 1, обнуляем его на всех площадках
             quantity = 0
 
         if marketplace_id == 1:  # Ozon
@@ -74,7 +107,7 @@ def make_update_stocks_list(marketplace_id: int, products: list, stock_percentag
                 'offer_id': '',
                 'product_id': product_id,
                 'stock': quantity,
-                'warehouse_id': warehouse_id
+                'warehouse_id': int(warehouse_id)
             })
 
         elif marketplace_id == 2:  # YandexMarket, нужна другая логика, так как YM сам запрашивает остатки
@@ -82,11 +115,11 @@ def make_update_stocks_list(marketplace_id: int, products: list, stock_percentag
 
         elif marketplace_id == 3:  # WB
             # обращение к БД, чтобы по id найти barcode
-            barcode = run_sql_query('SELECT barcode FROM product_list WHERE product_id=' + str(product_id))
+            barcode = run_sql_query('SELECT barcode FROM product_list WHERE id=' + str(product_id))
             update_stocks_list.append({
                 'barcode': barcode,
                 'stock': quantity,
-                'warehouseId': warehouse_id
+                'warehouseId': int(warehouse_id)
             })
 
         elif marketplace_id == 4:  # Sber
@@ -105,13 +138,10 @@ def process_marketplace_response(response: dict, marketplace_id: int, account_id
 
     processed_response = []
     if marketplace_id == 1:  # Ozon
-        for item in response['result']:
+        for product in response['result']:
             # получаем внутренний id товара по product_id Озона
-            product_id = run_sql_query('SELECT id FROM product_list WHERE product_id=' + str(item['product_id']))
-            updated = True
-            if not response['updated']:
-                updated = False
-            processed_response.append({'product_id': product_id, 'account_id': account_id, 'updated': updated})
+            product_id = run_sql_query("SELECT id FROM product_list WHERE product_id='" + str(product['product_id']) + "'")
+            processed_response.append({'product_id': product_id, 'account_id': account_id, 'updated': product['updated']})
 
     elif marketplace_id == 2:  # YandexMarket
         pass
@@ -119,12 +149,9 @@ def process_marketplace_response(response: dict, marketplace_id: int, account_id
     elif marketplace_id == 3:  # WB
         # формат ответа WB при успешном выполнении запроса
         # {'additionalErrors': None, 'data': {'errors': None}, 'errorText': '', 'error': False}
-        # в ответе WB товары не перечисляются, поэтому, если нет ошибок, выводим, что для всех товаров все ок
-        updated = True
-        if response['error']:
-            updated = False
+        # в ответе от WB товары не перечисляются, поэтому, если нет ошибок, выводим, что для всех товаров все ок
         for product in products:
-            processed_response.append({'product_id': product['product_id'], 'account_id': account_id, 'updated': updated})
+            processed_response.append({'product_id': product['product_id'], 'account_id': account_id, 'updated': not response['error']})
 
     elif marketplace_id == 4:  # Sber
         pass
@@ -161,6 +188,7 @@ parser = reqparse.RequestParser()
 parser.add_argument("data", type=dict, location="json", required=True)
 
 class Stocks(Resource):
+    decorators = [jwt_required()]  # аутентификация пользователя по JWT токену
     def post(self):
         args = parser.parse_args()
         data = args['data']
@@ -188,6 +216,10 @@ class Stocks(Resource):
             if account_id is None or account_id not in [account['account_id'] for account in data['accounts']]:
                 invalid_products.append(product['product_id'])
                 data['products'].remove(product)
+
+        # сделать выборку data['products'] по правилу
+        if rule_id != 0:
+            data['products'] = apply_rule(data['products'], rule_id)  # rule_id номер правила
 
         response_to_client = [] # здесь будем хранить ответ клиенту
 
