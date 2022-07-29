@@ -1,0 +1,14 @@
+###
+POST http://localhost:5000/stocks
+Content-Type: application/json
+
+{
+  "warehouseId": 1001,
+  "partnerWarehouseId": "1001",
+  "skus":
+    [
+      "263507710",
+      "263513205",
+      "263513128"
+    ]
+}
