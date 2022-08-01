@@ -1,79 +1,90 @@
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, request
+from flask_restful import Api, Resource, reqparse, abort
 import psycopg2
+import json
+from loguru import logger
 from API.config import MASTER_DB_DSN
-from datetime import datetime
+
+logger.remove()
+logger.add(sink='API/ym_logfile.log', format="{time} {level} {message}", level="INFO")
 
 app = Flask(__name__)
 api = Api(app)
 
-parser = reqparse.RequestParser()
-parser.add_argument("warehouseId", type=int)
-parser.add_argument("partnerWarehouseId", type=str)
-parser.add_argument("skus", action='append', required=True, help='Введите список товаров')
+parser = reqparse.RequestParser(bundle_errors=True)
+# добавление агрументов и валидация данных
+parser.add_argument(name="warehouseId", type=int, required=True, help='Параметр не задан или неверный тип данных')
+parser.add_argument(name="partnerWarehouseId", type=str) # устаревший параметр, в коде не используется
+parser.add_argument(name="skus", type=str, action='append', required=True, help='Список товаров пустой')
 
-try:
-    # подключение к БД Ecom Seller master_db
-    connection = psycopg2.connect(MASTER_DB_DSN)
-    cursor = connection.cursor()
-except Exception as error:
-    print(f'Ошибка {error} при подключении к базе данных')
-
-# выполнение типового SQL запроса в БД
 def run_sql_query(sql: str):
     try:
+        # подключение к БД
+        connection = psycopg2.connect(MASTER_DB_DSN)
+        cursor = connection.cursor()
         cursor.execute(sql)
-        return cursor.fetchone()[0]
+        return cursor.fetchall()
     except Exception as error:
-        print(f'Ошибка {error} при обработке SQL запроса {sql}')
+        logger.error(f'Ошибка {error} при соединении с БД или обработке SQL запроса {sql}')
+    finally:
+        if connection:
+            connection.close()
 
 class Stocks(Resource):
     def post(self):
         args = parser.parse_args()
         warehouseId = args['warehouseId']
-        partnerWarehouseId = args['partnerWarehouseId']  # устаревший параметр, в коде не используется
+
+        # здесь можно добавить дополнительную валидацию данных, например,
+        if not 6 < len(str(warehouseId)) < 10:
+            abort(400, message='Неверное значение параметра warehouseId')
+
         skus = args['skus'] # список идентификаторов товара sku
         skus_list = []
-        response = {'skus': skus_list}
+        response = {'skus': skus_list}  # сюда записываем ответ ЯМ
 
-        for sku in skus:
+        # открыть файл с информацией об остатках
+        file = open('API/ym_data.json', 'r')
+        products = json.load(file) # products - список словарей [ {'product_id': 1001, 'stock': 100, 'updated_at': 01/01/01} ... ]
+        file.close()
+
+        skus_with_stocks = [] # skus_with_stocks - список словарей [ {'sku': 1001, 'stock': 100, 'updated_at': 01/01/01}, ... ]
+
+        # получить из таблицы product_list список product_id, fbo_sku по списку skus в запросе ЯМ
+        sql = 'SELECT id, fbo_sku FROM product_list WHERE fbo_sku IN (' + str(skus).strip('[]') + ')'
+        results = run_sql_query(sql)  # список кортежей [ (product_id, fbo_sku), ... ]
+
+        # по всем найденным product_id получаем stock и формируем список skus_with_stocks
+        for item in results:
+            product_id, fbo_sku = item
+            product = list(filter(lambda product: product['product_id'] == product_id, products))[0]
+            skus_with_stocks.append({'sku': fbo_sku, 'stock': product['stock'], 'updated_at': product['updated_at']})
+
+        for sku in skus_with_stocks:
 
             items = []
 
-            # если типов доступности единиц товара может быть несколько, нужен цикл
-            # для тестирования предполагаем, что есть только один тип - FIT
+            # для тестирования предполагаем, что есть только один тип доступности единиц товара - FIT
+            # если этих типов > 1, на всякий случай делаем цикл
             for type in ['FIT']:
-
-                # по fbo_sku получить складские остатки из таблицы stock (НУЖЕН ДОСТУП К ТАБЛИЦЕ stock !!!)
-                # возможно нужно также использовать fbs_sku=
-                sql = """
-                SELECT stock FROM stock
-                WHERE product_id IN
-                (SELECT id FROM product_list WHERE fbo_sku='" + sku + "')  
-                """
-                stock = run_sql_query(sql)
-                stock = 10 # значение для теста
-
-                # Формат даты и времени: ISO 8601 со смещением относительно UTC, например, 2017-11-21T00:42:42+03:00
-                updated_at = datetime.now().astimezone().replace(microsecond=0).isoformat() # дата формирования ответа
 
                 items.append(
                     {
                         'type': type,  # тип доступности единиц товара: FIT — доступные и зарезервированные под заказы единицы
-                        'count': stock, # количество доступных и зарезервированных под заказы единиц
-                        "updatedAt": updated_at # дата и время последнего обновления информации об остатках указанного типа
+                        'count': sku['stock'], # количество доступных и зарезервированных под заказы единиц
+                        "updatedAt": sku['updated_at'] # дата и время последнего обновления информации об остатках указанного типа
                     }
                 )
 
             skus_list.append(
                 {
-                    'sku': sku,
+                    'sku': sku['sku'],
                     'warehouseId': warehouseId,
                     'items': items
                 }
             )
 
-        # ДОПИСАТЬ ОБРАБОТКУ ОШИБОК 400 И 500
+        logger.info(f'Запрос выполнен успешно. URL:{request.base_url}')
         return response
 
 api.add_resource(Stocks, "/stocks")
